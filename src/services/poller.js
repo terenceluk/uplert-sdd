@@ -1,5 +1,6 @@
 import { isSafeToFetch } from './url-safety.js';
-import { classifyPoll, POLL_TIMEOUT_MS } from './uptime-service.js';
+import { classifyPoll, computeStatus, POLL_TIMEOUT_MS } from './uptime-service.js';
+import { sendWebhookAlert } from './webhook-service.js';
 
 const DEFAULT_TICK_INTERVAL_MS = 15_000;
 
@@ -23,10 +24,17 @@ export async function pollDueChecks(db) {
 }
 
 async function pollOneCheck(db, check) {
+  const previousStatus = computeStatus(db, check.id);
   db.prepare('UPDATE checks SET poll_in_progress = 1 WHERE id = ?').run(check.id);
   try {
     const result = await performPoll(check.url);
-    recordPollResult(db, check.id, result);
+    const changedAt = recordPollResult(db, check.id, result);
+
+    const newStatus = classifyPoll(result.statusCode, result.responseTimeMs) ? 'up' : 'down';
+    const isGenuineTransition = previousStatus !== 'pending' && previousStatus !== newStatus;
+    if (check.webhook_url && isGenuineTransition) {
+      await sendWebhookAlert(db, check, newStatus, result.statusCode, result.responseTimeMs, changedAt);
+    }
   } finally {
     const now = new Date().toISOString();
     db.prepare(
@@ -62,4 +70,5 @@ function recordPollResult(db, checkId, { statusCode, responseTimeMs }) {
   db.prepare(
     'INSERT INTO poll_results (check_id, status_code, is_up, response_time_ms, polled_at) VALUES (?, ?, ?, ?, ?)'
   ).run(checkId, statusCode, isUp, responseTimeMs, now);
+  return now;
 }

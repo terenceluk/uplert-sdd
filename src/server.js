@@ -94,7 +94,7 @@ export function createServer(db) {
     const cookies = parseCookies(req.headers.cookie);
 
     let body = {};
-    if (req.method === 'POST' || req.method === 'PUT') {
+    if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
       try {
         const raw = await readBody(req);
         body = raw ? JSON.parse(raw) : {};

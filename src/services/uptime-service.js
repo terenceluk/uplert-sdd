@@ -50,6 +50,7 @@ export function recentResponseTimes(db, checkId, limit = RECENT_RESPONSE_LIMIT) 
 }
 
 export function buildCheckView(db, check) {
+  const hasWebhook = check.webhook_url != null;
   return {
     id: check.id,
     url: check.url,
@@ -58,5 +59,10 @@ export function buildCheckView(db, check) {
     status: computeStatus(db, check.id),
     uptimePercent24h: computeUptimePercent24h(db, check.id, check.created_at),
     recentResponseTimesMs: recentResponseTimes(db, check.id),
+    webhookUrl: check.webhook_url ?? null,
+    // Both null whenever no webhook is set, even if a prior attempt's outcome is
+    // still stored on the row — hiding stale state is a display-time rule (FR-009).
+    webhookLastDeliveryStatus: hasWebhook ? check.webhook_last_outcome ?? null : null,
+    webhookLastDeliveryAt: hasWebhook ? check.webhook_last_attempted_at ?? null : null,
   };
 }

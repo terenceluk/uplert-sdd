@@ -1,11 +1,11 @@
 import { isSafeToFetch } from './url-safety.js';
 
-const MAX_URL_LENGTH = 2048;
+export const MAX_URL_LENGTH = 2048;
 const MAX_DISPLAY_NAME_LENGTH = 100;
 const MIN_INTERVAL_SECONDS = 60;
 const MAX_INTERVAL_SECONDS = 86400;
 
-function isValidHttpUrl(value) {
+export function isValidHttpUrl(value) {
   try {
     const parsed = new URL(value);
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
@@ -77,6 +77,21 @@ export function deleteCheck(db, userId, checkId) {
   }
   db.prepare('DELETE FROM checks WHERE id = ?').run(checkId);
   return true;
+}
+
+/**
+ * Ownership-checked update of a check's webhook URL. Validation of `webhookUrl` (syntax,
+ * length, destination safety) is the caller's responsibility (see webhook-service.js's
+ * validateWebhookUrl) — kept out of this module to avoid a circular import between
+ * check-service.js and webhook-service.js. `webhookUrl: null` clears the webhook.
+ */
+export function updateCheckWebhook(db, userId, checkId, webhookUrl) {
+  const check = getCheckById(db, checkId);
+  if (!check || check.user_id !== userId) {
+    return null;
+  }
+  db.prepare('UPDATE checks SET webhook_url = ? WHERE id = ?').run(webhookUrl, checkId);
+  return getCheckById(db, checkId);
 }
 
 export function getAdminRoster(db) {

@@ -61,6 +61,13 @@ function renderChecks(checks) {
       <td class="${statusClass}">${check.status}</td>
       <td>${check.uptimePercent24h}%</td>
       <td>${check.recentResponseTimesMs.join(', ')}</td>
+      <td>
+        <input type="url" class="webhook-input" placeholder="https://..." value="${escapeHtml(check.webhookUrl || '')}" />
+        <button data-id="${check.id}" class="webhook-save-btn">Save</button>
+        <button data-id="${check.id}" class="webhook-clear-btn">Clear</button>
+        <span class="error webhook-error" data-id="${check.id}"></span>
+        ${renderWebhookDeliveryStatus(check)}
+      </td>
       <td><button data-id="${check.id}" class="delete-btn">Delete</button></td>
     `;
     body.appendChild(row);
@@ -72,6 +79,42 @@ function renderChecks(checks) {
       refreshChecks();
     });
   });
+
+  body.querySelectorAll('.webhook-save-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const row = btn.closest('tr');
+      const input = row.querySelector('.webhook-input');
+      await setWebhookUrl(btn.dataset.id, input.value.trim() || null);
+    });
+  });
+
+  body.querySelectorAll('.webhook-clear-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      await setWebhookUrl(btn.dataset.id, null);
+    });
+  });
+}
+
+function renderWebhookDeliveryStatus(check) {
+  if (!check.webhookUrl || !check.webhookLastDeliveryStatus) return '';
+  const ok = check.webhookLastDeliveryStatus === 'succeeded';
+  const label = ok ? '✓ delivered' : '✗ failed';
+  const cssClass = ok ? 'status-up' : 'status-down';
+  const when = new Date(check.webhookLastDeliveryAt).toLocaleString();
+  return `<div class="${cssClass}">Webhook: ${label} ${escapeHtml(when)}</div>`;
+}
+
+async function setWebhookUrl(checkId, webhookUrl) {
+  const { ok, data } = await api(`/api/checks/${checkId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ webhookUrl }),
+  });
+  const errorEl = document.querySelector(`.webhook-error[data-id="${checkId}"]`);
+  if (!ok) {
+    if (errorEl) errorEl.textContent = data?.error || 'Could not update webhook';
+    return;
+  }
+  refreshChecks();
 }
 
 async function refreshAdminRoster() {
