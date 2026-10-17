@@ -1,0 +1,13 @@
+{
+  "name": "uplert",
+  "version": "1.0.0",
+  "description": "Personal uptime monitor",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  }
+}

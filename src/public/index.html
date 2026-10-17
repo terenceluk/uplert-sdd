@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Uplert</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Uplert</h1>
+    <div id="user-bar" class="hidden">
+      <span id="user-login"></span>
+      <button id="logout-btn">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="auth-view">
+      <div class="auth-forms">
+        <form id="login-form">
+          <h2>Sign in</h2>
+          <label>Login <input type="text" name="login" required /></label>
+          <label>Password <input type="password" name="password" required /></label>
+          <button type="submit">Sign in</button>
+          <p class="error" id="login-error"></p>
+        </form>
+
+        <form id="register-form">
+          <h2>Register</h2>
+          <label>Login <input type="text" name="login" required /></label>
+          <label>Password <input type="password" name="password" required /></label>
+          <button type="submit">Create account</button>
+          <p class="error" id="register-error"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="dashboard-view" class="hidden">
+      <h2>Your checks</h2>
+      <form id="add-check-form">
+        <label>URL <input type="url" name="url" placeholder="https://example.com" required /></label>
+        <label>Display name <input type="text" name="displayName" required /></label>
+        <label>Interval (seconds) <input type="number" name="intervalSeconds" min="60" max="86400" value="60" required /></label>
+        <button type="submit">Add check</button>
+        <p class="error" id="add-check-error"></p>
+      </form>
+
+      <table id="checks-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>URL</th>
+            <th>Status</th>
+            <th>Uptime (24h)</th>
+            <th>Recent response times (ms)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="checks-body"></tbody>
+      </table>
+
+      <section id="admin-section" class="hidden">
+        <h2>Administrator: all users</h2>
+        <table id="admin-table">
+          <thead>
+            <tr>
+              <th>Login</th>
+              <th>Role</th>
+              <th>Check count</th>
+            </tr>
+          </thead>
+          <tbody id="admin-body"></tbody>
+        </table>
+      </section>
+    </section>
+  </main>
+
+  <script src="/dashboard.js"></script>
+</body>
+</html>

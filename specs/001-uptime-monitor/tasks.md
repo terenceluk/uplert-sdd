@@ -37,18 +37,18 @@ dashboard, and the poller.
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create the project directory structure per plan.md: `src/db/`, `src/routes/`,
+- [X] T001 Create the project directory structure per plan.md: `src/db/`, `src/routes/`,
   `src/services/`, `src/public/`, `tests/contract/`, `tests/integration/`, `tests/unit/`
-- [ ] T002 Create `package.json` at the repo root: `"type": "module"`,
+- [X] T002 Create `package.json` at the repo root: `"type": "module"`,
   `"engines": { "node": ">=22.5.0" }` (research.md §1 — minimum version shipping
   `node:sqlite`), `"scripts": { "start": "node src/server.js", "test": "node --test" }`,
   and no `dependencies`/`devDependencies` entries at all (Constitution Principle VI;
   research.md Summary: "zero entries... zero in devDependencies")
-- [ ] T003 [P] Create `README.md` documenting the single `npm start` command, the Node.js
+- [X] T003 [P] Create `README.md` documenting the single `npm start` command, the Node.js
   22.5+ prerequisite, the expected `node:sqlite` experimental-module startup warning
   (research.md §1 Risk/mitigation), and that `uplert.db` is created automatically on first
   run with no separate migration step (Constitution Principle II)
-- [ ] T004 [P] Create `.gitignore` at the repo root excluding `node_modules/` and `*.db`
+- [X] T004 [P] Create `.gitignore` at the repo root excluding `node_modules/` and `*.db`
 
 ---
 
@@ -60,7 +60,7 @@ the server/router must exist before any story can be built or tested.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T005 Create `src/db/schema.sql` with exactly these four tables and constraints, taken
+- [X] T005 Create `src/db/schema.sql` with exactly these four tables and constraints, taken
   verbatim from data-model.md:
   - `users`: `id INTEGER PRIMARY KEY AUTOINCREMENT`;
     `login TEXT UNIQUE NOT NULL CHECK(length(login) <= 254)` ("Email or username (FR-001);
@@ -86,11 +86,11 @@ the server/router must exist before any story can be built or tested.
   - `sessions`: `token_hash TEXT PRIMARY KEY` ("never in plaintext"... "the raw value is
     sent to the client... and never stored"); `user_id INTEGER NOT NULL REFERENCES users(id)
     ON DELETE CASCADE`; `created_at TEXT NOT NULL`; `last_seen_at TEXT NOT NULL`
-- [ ] T006 Create `src/db/index.js`: opens the SQLite file via `node:sqlite`'s
+- [X] T006 Create `src/db/index.js`: opens the SQLite file via `node:sqlite`'s
   `DatabaseSync` (creating it automatically if absent — Constitution Principle II) and
   applies `schema.sql` idempotently (`CREATE TABLE IF NOT EXISTS`) on every startup
   (depends on T005)
-- [ ] T007 [P] Create `src/services/auth-service.js`: `hashPassword`/`verifyPassword` using
+- [X] T007 [P] Create `src/services/auth-service.js`: `hashPassword`/`verifyPassword` using
   `node:crypto.scrypt` with a random per-user salt (research.md §3, Constitution Principle
   V); `createSession(userId)` generating `crypto.randomBytes(32)`, storing only
   `sha256(token)` as `token_hash` with `created_at`/`last_seen_at` — "the raw value is sent
@@ -98,16 +98,16 @@ the server/router must exist before any story can be built or tested.
   that hashes the incoming token, looks it up, rejects and deletes the row if
   `last_seen_at` exceeds a fixed inactivity window, otherwise refreshes `last_seen_at`
   (Constitution Principle V, v1.1.0) (depends on T006)
-- [ ] T008 [P] Create `src/services/url-safety.js`: resolves a hostname via
+- [X] T008 [P] Create `src/services/url-safety.js`: resolves a hostname via
   `dns.promises.lookup()` and rejects if the resolved address is private (RFC 1918:
   `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), loopback (`127.0.0.0/8`, `::1`),
   link-local (`169.254.0.0/16`, `fe80::/10`), or another non-publicly-routable/metadata
   address such as `169.254.169.254` (FR-019; research.md §9) — pure function, no DB
   dependency
-- [ ] T009 [P] Create `src/server.js`: a `node:http` server with a minimal method+path
+- [X] T009 [P] Create `src/server.js`: a `node:http` server with a minimal method+path
   router, cookie parse/set helpers, and static file serving for any non-`/api/*` path from
   `src/public/` (contracts/api.md §Static dashboard) (depends on T006)
-- [ ] T010 Create `src/routes/auth.js` implementing, per contracts/api.md: `POST
+- [X] T010 Create `src/routes/auth.js` implementing, per contracts/api.md: `POST
   /api/register` (FR-001 — 409 "login already taken" is an accepted, documented exception
   to the no-enumeration posture, applying only here; FR-002 — the very first row ever
   inserted into `users` gets `role = 'admin'`, every later one `'user'`); `POST /api/login`
@@ -115,25 +115,25 @@ the server/router must exist before any story can be built or tested.
   byte-identical 401 status/body for an unknown login and a correct login with wrong
   password); `POST /api/logout` (deletes the session row). Register these routes in
   `src/server.js`'s router (depends on T007, T009)
-- [ ] T011 [P] Contract test for `POST /api/register` in `tests/contract/register.test.js`:
+- [X] T011 [P] Contract test for `POST /api/register` in `tests/contract/register.test.js`:
   201 with `role: "admin"` for the first-ever account and `role: "user"` for the next one
   (FR-002); 409 for a duplicate `login` (FR-001); 400 for missing/empty `login` or
   `password` (FR-001); 400 for a 255-character `login` or a 1025-character `password`,
   201 for a 254-character `login` and a 1024-character `password` (FR-001)
-- [ ] T012 [P] Contract test for `POST /api/login` and `POST /api/logout` in
+- [X] T012 [P] Contract test for `POST /api/login` and `POST /api/logout` in
   `tests/contract/login.test.js`: 200 with a `Set-Cookie` containing `HttpOnly` and
   `SameSite=Strict` on success; identical 401 status and body for an unknown login versus
   a correct login with the wrong password (FR-003a); 204 and session-row deletion on
   logout
-- [ ] T013 [P] Unit test for session hashing and inactivity expiry in
+- [X] T013 [P] Unit test for session hashing and inactivity expiry in
   `tests/unit/auth-service.test.js`: the `sessions` table never contains the raw token,
   only its `sha256` hash (Constitution Principle V); a session whose `last_seen_at` exceeds
   the configured inactivity window is rejected by `validateSession` and removed
   (data-model.md §Session)
-- [ ] T014 [P] Unit test for `url-safety` range detection in
+- [X] T014 [P] Unit test for `url-safety` range detection in
   `tests/unit/url-safety.test.js`: rejects `127.0.0.1`, `10.0.0.1`, `192.168.1.1`,
   `172.16.0.5`, `169.254.169.254`, `::1`, and `fe80::1`; accepts a public address (FR-019)
-- [ ] T015 [P] Integration test for session cookie attributes against the live server in
+- [X] T015 [P] Integration test for session cookie attributes against the live server in
   `tests/integration/session-cookie.test.js`: starts the real HTTP server against an
   ephemeral SQLite file, registers and logs in a user, and asserts the raw `Set-Cookie`
   header contains both `HttpOnly` and `SameSite=Strict` (quickstart.md Scenario 7)
@@ -159,58 +159,58 @@ one poll, and confirm `GET /api/checks` (and the dashboard) shows an up/down sta
 > Write these tests FIRST, ensure they FAIL before implementation (Constitution Principle
 > IV; all run via `node --test` as part of the one full suite)
 
-- [ ] T016 [P] [US1] Contract test for `POST /api/checks` in
+- [X] T016 [P] [US1] Contract test for `POST /api/checks` in
   `tests/contract/checks-create.test.js`: 201 with `status: "pending"` and an empty
   `recentResponseTimesMs` for a valid check (FR-004); 400 for a non-`http(s)` URL; 400 for
   `intervalSeconds` of 59 or 86401, 201 for exactly 60 and exactly 86400 — "60–86400
   inclusive" (FR-005); 400 when the URL's hostname resolves to a private/loopback/
   link-local/metadata address (FR-019); 400 for a 2049-character `url` or a 101-character
   `displayName`, 201 for a 2048-character `url` and a 100-character `displayName` (FR-005)
-- [ ] T017 [P] [US1] Contract test for `GET /api/checks` in
+- [X] T017 [P] [US1] Contract test for `GET /api/checks` in
   `tests/contract/checks-list.test.js`: response items include `id`, `url`, `displayName`,
   `intervalSeconds`, `status`, `uptimePercent24h`, `recentResponseTimesMs`
   (contracts/api.md); only the caller's own checks are ever returned (FR-014)
-- [ ] T018 [P] [US1] Unit test for poll up/down classification in
+- [X] T018 [P] [US1] Unit test for poll up/down classification in
   `tests/unit/poll-classification.test.js`: status codes 200 and 399 classify "up" when
   the full response body is read within 10,000ms of connection start; status 400 classifies
   "down"; a response whose status/headers arrive quickly but whose body finishes reading
   after 10,000ms (measured from connection start, not time-to-first-byte) also classifies
   "down" (FR-008)
-- [ ] T019 [P] [US1] Unit test for uptime-service derived values in
+- [X] T019 [P] [US1] Unit test for uptime-service derived values in
   `tests/unit/uptime-service.test.js`: 24-hour uptime percentage is computed only from
   `PollResult` rows at/after `max(check.created_at, now - 24h)` (FR-010); "recent response
   times" returns the most recent 20 rows' `response_time_ms`, newest first (FR-011; spec
   Assumptions)
-- [ ] T020 [P] [US1] Integration test for due-check overlap handling in
+- [X] T020 [P] [US1] Integration test for due-check overlap handling in
   `tests/integration/poller-scheduling.test.js`: a check whose poll is still in progress is
   skipped on its next due tick and is re-polled one interval after the in-progress poll
   completes — never concurrently with itself (FR-006)
-- [ ] T021 [P] [US1] Integration test for poll request shape in
+- [X] T021 [P] [US1] Integration test for poll request shape in
   `tests/integration/poller-request-shape.test.js`: against a local test HTTP server
   standing in for the monitored endpoint, asserts the poller sends a GET request with no
   custom headers, request body, or Authorization header (FR-006a)
-- [ ] T022 [P] [US1] Integration test for the end-to-end monitor flow in
+- [X] T022 [P] [US1] Integration test for the end-to-end monitor flow in
   `tests/integration/monitor-flow.test.js`: register, add a check against a local test
   server, wait for a poll, and assert `GET /api/checks` reflects status "up"/"down",
   `uptimePercent24h`, and `recentResponseTimesMs` (quickstart.md Scenarios 1–2; FR-006,
   FR-007, FR-009, SC-002)
-- [ ] T023 [P] [US1] Integration test for URL-safety re-checking at poll time in
+- [X] T023 [P] [US1] Integration test for URL-safety re-checking at poll time in
   `tests/integration/poller-url-safety.test.js`: a check whose resolved address changes to
   a private range after creation is blocked on its next poll and recorded "down," not
   silently skipped (FR-019; quickstart.md Scenario 3 step 2)
 
 ### Implementation for User Story 1
 
-- [ ] T024 [P] [US1] Implement `src/services/check-service.js`: `createCheck(userId, url,
+- [X] T024 [P] [US1] Implement `src/services/check-service.js`: `createCheck(userId, url,
   displayName, intervalSeconds)` validating URL syntax and the 60–86400-inclusive interval
   range (FR-004, FR-005), calling `url-safety` before insert and rejecting if unsafe
   (FR-019); `listChecksForUser(userId)` joining each check's latest `PollResult` (depends
   on T006, T008)
-- [ ] T025 [P] [US1] Implement `src/services/uptime-service.js`: `computeStatus(check)` →
+- [X] T025 [P] [US1] Implement `src/services/uptime-service.js`: `computeStatus(check)` →
   `"up" | "down" | "pending"` from the latest `PollResult` (FR-009);
   `computeUptimePercent24h(checkId)` and `recentResponseTimes(checkId, limit = 20)` per
   data-model.md Derived values (FR-010, FR-011) (depends on T006)
-- [ ] T026 [P] [US1] Implement `src/services/poller.js`: a `setInterval` tick that selects
+- [X] T026 [P] [US1] Implement `src/services/poller.js`: a `setInterval` tick that selects
   due checks (`last_polled_at IS NULL OR last_polled_at + interval_seconds <= now`, AND
   `poll_in_progress = 0`), sets `poll_in_progress = 1`, re-validates the URL via
   `url-safety` (FR-019), issues a GET-only `fetch` with a single 10-second
@@ -219,14 +219,14 @@ one poll, and confirm `GET /api/checks` (and the dashboard) shows an up/down sta
   (FR-006a, FR-008; research.md §6) — records `status_code`/`response_time_ms`/`polled_at`/`is_up`
   into `poll_results`, and clears `poll_in_progress` (FR-006, FR-007) (depends on T006,
   T008)
-- [ ] T027 [US1] Implement `src/routes/checks.js`: `GET /api/checks` and `POST
+- [X] T027 [US1] Implement `src/routes/checks.js`: `GET /api/checks` and `POST
   /api/checks` per contracts/api.md, requiring a valid session (via `auth-service`) and
   using `check-service`/`uptime-service`; register in `src/server.js`'s router (depends on
   T009, T010, T024, T025)
-- [ ] T028 [P] [US1] Start the poller from `src/server.js` alongside the HTTP listener, in
+- [X] T028 [P] [US1] Start the poller from `src/server.js` alongside the HTTP listener, in
   the same process (user direction: "same process on an interval timer") (depends on T026,
   T027)
-- [ ] T029 [P] [US1] Implement `src/public/index.html`, `dashboard.js`, `styles.css`:
+- [X] T029 [P] [US1] Implement `src/public/index.html`, `dashboard.js`, `styles.css`:
   sign-in/register forms, an "add check" form (URL, display name, interval), and a check
   list rendering status/uptime/response times from `GET /api/checks`, posting new checks
   to `POST /api/checks` (depends on T010, T027)
@@ -246,24 +246,24 @@ anywhere.
 
 ### Tests for User Story 2
 
-- [ ] T030 [P] [US2] Contract test for `DELETE /api/checks/:id` in
+- [X] T030 [P] [US2] Contract test for `DELETE /api/checks/:id` in
   `tests/contract/checks-delete.test.js`: 204, and the check is absent from a subsequent
   `GET /api/checks` for its owner (FR-012); identical 404 when the id doesn't exist or
   belongs to another user (FR-014)
-- [ ] T031 [P] [US2] Integration test for cascade history deletion in
+- [X] T031 [P] [US2] Integration test for cascade history deletion in
   `tests/integration/delete-cascade.test.js`: a check with recorded `poll_results` is
   deleted, and no `poll_results` row referencing that `check_id` remains afterward (FR-013)
 
 ### Implementation for User Story 2
 
-- [ ] T032 [US2] Add `deleteCheck(userId, checkId)` to `src/services/check-service.js`:
+- [X] T032 [US2] Add `deleteCheck(userId, checkId)` to `src/services/check-service.js`:
   relies on the schema's `ON DELETE CASCADE` for history removal (FR-013) and returns an
   identical "not found" outcome whether the check doesn't exist or isn't owned by `userId`
   (FR-014) (depends on T024)
-- [ ] T033 [US2] Implement `DELETE /api/checks/:id` in `src/routes/checks.js` per
+- [X] T033 [US2] Implement `DELETE /api/checks/:id` in `src/routes/checks.js` per
   contracts/api.md, requiring a valid session and re-deriving ownership from it, never
   from the URL alone (FR-012, FR-014) (depends on T027, T032)
-- [ ] T034 [US2] Add a delete control to each check row in `src/public/dashboard.js`
+- [X] T034 [US2] Add a delete control to each check row in `src/public/dashboard.js`
   calling `DELETE /api/checks/:id` and removing it from the rendered list on success
   (depends on T029, T033)
 
@@ -282,7 +282,7 @@ user's check URLs, statuses, or history; confirm a non-administrator is denied a
 
 ### Tests for User Story 3
 
-- [ ] T035 [P] [US3] Contract test for `GET /api/admin/users` in
+- [X] T035 [P] [US3] Contract test for `GET /api/admin/users` in
   `tests/contract/admin.test.js`: 200 with every registered user's `id`/`login`/`role`/
   `checkCount` for an admin caller (FR-015); response objects contain no check-level field
   — no url, status, or history (FR-016); 403 for a signed-in non-admin; 401 for no session
@@ -290,14 +290,14 @@ user's check URLs, statuses, or history; confirm a non-administrator is denied a
 
 ### Implementation for User Story 3
 
-- [ ] T036 [US3] Implement an admin-roster query in `src/services/check-service.js`:
+- [X] T036 [US3] Implement an admin-roster query in `src/services/check-service.js`:
   selects every user with `COUNT(*)` of their checks, selecting no `poll_results` columns
   and no per-check `checks` columns beyond the count (FR-015, FR-016) (depends on T006)
-- [ ] T037 [US3] Implement `src/routes/admin.js`: `GET /api/admin/users` requiring a valid
+- [X] T037 [US3] Implement `src/routes/admin.js`: `GET /api/admin/users` requiring a valid
   session with `role = "admin"` (403 otherwise, 401 if unauthenticated) per
   contracts/api.md; register in `src/server.js`'s router (FR-015, FR-016, FR-017) (depends
   on T009, T010, T036)
-- [ ] T038 [US3] Add an admin-only roster view to `src/public/dashboard.js`, shown only
+- [X] T038 [US3] Add an admin-only roster view to `src/public/dashboard.js`, shown only
   when the signed-in user's role is `"admin"`, rendering login/role/checkCount per user
   from `GET /api/admin/users` (depends on T029, T037)
 
@@ -310,13 +310,13 @@ user's check URLs, statuses, or history; confirm a non-administrator is denied a
 **Purpose**: Final verification against the constitution's Quality Gates before this
 feature is considered complete.
 
-- [ ] T039 [P] Run the full automated suite (`node --test`) and confirm every FR in
+- [X] T039 [P] Run the full automated suite (`node --test`) and confirm every FR in
   spec.md — FR-001 through FR-019 **including the lettered FR-003a and FR-006a**, but
   excluding the scope-exclusion statement FR-018 — has at least one passing test; fix any
   gap found (Constitution Principle IV)
-- [ ] T040 [P] Execute quickstart.md Scenarios 1–7 by hand against a clean `npm start` on
+- [X] T040 [P] Execute quickstart.md Scenarios 1–7 by hand against a clean `npm start` on
   Windows 11 and confirm every "Expect" outcome (Constitution Technology Constraints)
-- [ ] T041 Review every checks/admin/poller code path against Constitution Quality Gates
+- [X] T041 Review every checks/admin/poller code path against Constitution Quality Gates
   items 3–4: server-side authorization re-derived from the session on every request
   (never from a client-supplied id/role); adaptive password hashing and hashed-at-rest
   session storage in place; inactivity expiry enforced; session cookies `HttpOnly` +
@@ -440,3 +440,19 @@ With multiple developers, once Foundational (Phase 2) is complete:
   presence in plan.md
 - Commit after each task or logical group
 - Stop at any checkpoint to validate a story independently before moving on
+
+---
+
+## Phase 7: Convergence
+
+**Purpose**: Close a gap found between plan.md's documented structure and the current
+code, identified by `/speckit-converge` after `/speckit-implement` completed Phases 1–6.
+
+- [X] T042 Extract the static dashboard file-serving logic out of `src/server.js`'s request
+  handler into its own `src/routes/static.js` module, registered through the same
+  `addRoute`/router mechanism (or an equivalent explicit hook) the other route modules
+  use, so the codebase matches the file plan.md's Project Structure names
+  (`src/routes/static.js # Serves public/ for the dashboard shell`) per plan: Project
+  Structure (partial). No behavior change — `GET /` and every non-`/api/*` path must
+  continue to serve `src/public/{index.html,dashboard.js,styles.css}` exactly as today,
+  and the full `node --test` suite (48/48) must still pass.
